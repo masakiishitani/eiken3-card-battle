@@ -37,7 +37,9 @@ const initialGameState = {
   correctAnswers: 0,
   totalQuestions: 0,
   learnedWords: new Set(),
-  reviewWords: new Set()
+  reviewWords: new Set(),
+  // 攻撃制限（ゲーム内で1回のみ）
+  attackedCardsThisGame: new Set() // カードIDのセット
 };
 
 // アクションタイプ
@@ -126,6 +128,15 @@ const gameReducer = (state, action) => {
       const { attackingCard, defendingPlayer, defendingCardIndex } = action;
       const defender = state[defendingPlayer];
       
+      // 攻撃制限チェック（1回のみ）
+      const cardId = `${attackingCard.id}-${attackingCard.word}`;
+      if (state.attackedCardsThisGame.has(cardId)) {
+        return {
+          ...state,
+          battleLog: [...state.battleLog, `${attackingCard.word}はすでに攻撃済みです！`]
+        };
+      }
+      
       let damage = attackingCard.attack;
       let newDefenderState = { ...defender };
       let logMessage = '';
@@ -155,11 +166,16 @@ const gameReducer = (state, action) => {
         newGameStatus = defendingPlayer === 'player1' ? 'player2Win' : 'player1Win';
       }
       
+      // 攻撃済みカードとして記録
+      const newAttackedCards = new Set(state.attackedCardsThisGame);
+      newAttackedCards.add(cardId);
+      
       return {
         ...state,
         [defendingPlayer]: newDefenderState,
         gameStatus: newGameStatus,
-        battleLog: [...state.battleLog, logMessage]
+        battleLog: [...state.battleLog, logMessage],
+        attackedCardsThisGame: newAttackedCards
       };
 
     case GAME_ACTIONS.END_TURN:

@@ -96,7 +96,11 @@ const GameBoard = () => {
   };
 
   const canAttack = (card) => {
-    return gameState.currentTurn === 'player1' && gameState.phase === 'battle';
+    const cardId = `${card.id}-${card.word}`;
+    const hasAttacked = gameState.attackedCardsThisGame.has(cardId);
+    return gameState.currentTurn === 'player1' && 
+           gameState.phase === 'battle' && 
+           !hasAttacked;
   };
 
   if (gameState.gameStatus !== 'playing') {
@@ -222,15 +226,21 @@ const GameBoard = () => {
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 min-h-[120px]">
-              {gameState.player1.field.map((card, index) => (
-                <Card
-                  key={`player-field-${index}`}
-                  card={card}
-                  showAnswer={true}
-                  isPlayable={canAttack(card)}
-                  onClick={() => canAttack(card) && handleAttack(card)}
-                />
-              ))}
+              {gameState.player1.field.map((card, index) => {
+                const cardId = `${card.id}-${card.word}`;
+                const hasAttacked = gameState.attackedCardsThisGame.has(cardId);
+                
+                return (
+                  <Card
+                    key={`player-field-${index}`}
+                    card={card}
+                    showAnswer={true}
+                    isPlayable={canAttack(card)}
+                    hasAttacked={hasAttacked}
+                    onClick={() => canAttack(card) && handleAttack(card)}
+                  />
+                );
+              })}
               {gameState.player1.field.length === 0 && (
                 <div className="flex-1 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center">
                   <span className="text-gray-500 text-sm">カードをプレイしてください</span>

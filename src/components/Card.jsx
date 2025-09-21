@@ -13,7 +13,8 @@ const Card = ({
   onClick, 
   onPlay,
   showAnswer = false,
-  isInHand = false 
+  isInHand = false,
+  hasAttacked = false
 }) => {
   const [showMeaning, setShowMeaning] = useState(showAnswer);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -74,6 +75,7 @@ const Card = ({
         w-32 h-44 relative overflow-hidden
         ${isPlayable ? 'hover:shadow-lg' : 'opacity-50 cursor-not-allowed'}
         ${isSelected ? 'ring-2 ring-yellow-400 shadow-xl' : ''}
+        ${hasAttacked ? 'opacity-60 grayscale border-gray-500' : ''}
         bg-gradient-to-br from-slate-800 to-slate-900
         border-2 border-slate-600
       `}>
@@ -171,6 +173,15 @@ const Card = ({
             ))}
           </div>
         </div>
+
+        {/* 攻撃済みバッジ */}
+        {hasAttacked && (
+          <div className="absolute top-1 left-1">
+            <Badge variant="secondary" className="text-xs px-1 py-0 bg-red-600 text-white">
+              攻撃済み
+            </Badge>
+          </div>
+        )}
       </UICard>
     </motion.div>
   );
