@@ -237,29 +237,41 @@ export const analyzeWordDistribution = () => {
 
 // バランス調整されたカード統計計算
 export const calculateBalancedCardStats = (word) => {
-  const baseAttack = word.difficulty;
-  const baseDefense = Math.min(word.word.length, 10);
-  
-  // 品詞による補正（バランス調整済み）
-  const partOfSpeechBonus = {
-    verb: { attack: 2, defense: 1, cost: 0 },      // 攻撃的、追加ターン効果
-    noun: { attack: 1, defense: 3, cost: 0 },      // 防御的、HP回復効果
-    adjective: { attack: 1, defense: 2, cost: -1 }, // バランス型、防御強化効果
-    adverb: { attack: 3, defense: 0, cost: 1 }     // 高攻撃、攻撃強化効果
-  };
-  
-  const bonus = partOfSpeechBonus[word.partOfSpeech] || { attack: 0, defense: 0, cost: 0 };
-  
-  const attack = baseAttack + bonus.attack;
-  const defense = baseDefense + bonus.defense;
-  const cost = Math.max(1, Math.ceil((attack + defense) / 4) + bonus.cost);
-  
-  return {
-    ...word,
-    attack,
-    defense,
-    cost
-  };
+  let cost, attack, defense;
+
+  // 基本値を調整してゲームをスピーディーに
+  const baseAttack = 3;
+  const baseDefense = 3;
+  const baseCost = 2;
+
+  switch (word.partOfSpeech) {
+    case "verb":
+      cost = Math.max(1, baseCost + Math.floor(word.difficulty * 0.5));
+      attack = Math.max(1, baseAttack + word.difficulty * 1.5);
+      defense = Math.max(1, baseDefense + word.difficulty * 0.5);
+      break;
+    case "noun":
+      cost = Math.max(1, baseCost + Math.floor(word.difficulty * 0.3));
+      attack = Math.max(1, baseAttack + word.difficulty * 0.5);
+      defense = Math.max(1, baseDefense + word.difficulty * 1.5);
+      break;
+    case "adjective":
+      cost = Math.max(1, baseCost + Math.floor(word.difficulty * 0.2));
+      attack = Math.max(1, baseAttack + Math.floor(word.difficulty * 0.2));
+      defense = Math.max(1, baseDefense + word.difficulty * 1.0);
+      break;
+    case "adverb":
+      cost = Math.max(1, baseCost + Math.floor(word.difficulty * 0.1));
+      attack = Math.max(1, baseAttack + word.difficulty * 1.0);
+      defense = Math.max(1, baseDefense + Math.floor(word.difficulty * 0.2));
+      break;
+    default:
+      cost = baseCost;
+      attack = baseAttack;
+      defense = baseDefense;
+  }
+
+  return { ...word, cost, attack, defense };
 };
 
 // レアリティシステム

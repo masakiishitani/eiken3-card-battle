@@ -97,7 +97,7 @@ const GameBoard = () => {
 
   const canAttack = (card) => {
     const cardId = `${card.id}-${card.word}`;
-    const hasAttacked = gameState.attackedCardsThisGame.has(cardId);
+    const hasAttacked = gameState.attackedCardsThisTurn.has(cardId);
     return gameState.currentTurn === 'player1' && 
            gameState.phase === 'battle' && 
            !hasAttacked;
@@ -231,14 +231,14 @@ const GameBoard = () => {
                 const hasAttacked = gameState.attackedCardsThisGame.has(cardId);
                 
                 return (
-                  <Card
-                    key={`player-field-${index}`}
-                    card={card}
-                    showAnswer={true}
-                    isPlayable={canAttack(card)}
-                    hasAttacked={hasAttacked}
-                    onClick={() => canAttack(card) && handleAttack(card)}
-                  />
+                <Card
+                  key={`player-field-${index}`}
+                  card={card}
+                  showAnswer={true}
+                  isPlayable={canAttack(card)}
+                  hasAttacked={gameState.attackedCardsThisTurn.has(`${card.id}-${card.word}`)}
+                  onClick={() => canAttack(card) && handleAttack(card)}
+                />
                 );
               })}
               {gameState.player1.field.length === 0 && (
