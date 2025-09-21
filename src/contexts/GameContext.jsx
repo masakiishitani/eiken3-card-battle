@@ -39,7 +39,7 @@ const initialGameState = {
   learnedWords: new Set(),
   reviewWords: new Set(),
   // 攻撃制限（ターンごとにリセット）
-  attackedCardsThisTurn: new Set() // カードIDのセット（削除予定）
+  attackedCardsThisTurn: new Set() // カードIDのセット
 };
 
 // アクションタイプ
@@ -142,6 +142,15 @@ const gameReducer = (state, action) => {
       const attackerPlayer = state[state.currentTurn];
       const defender = state[defendingPlayer];
       
+      // 攻撃制限チェック（ターンごとに1回のみ）
+      const cardId = `${attackingCard.id}-${attackingCard.word}`;
+      if (state.attackedCardsThisTurn.has(cardId)) {
+        return {
+          ...state,
+          battleLog: [...state.battleLog, `${attackingCard.word}はすでにこのターン攻撃済みです！`]
+        };
+      }
+      
       let damage = attackingCard.attack;
       let newDefenderState = { ...defender };
       let logMessage = "";
@@ -174,6 +183,10 @@ const gameReducer = (state, action) => {
         newGameStatus = defendingPlayer === 'player1' ? 'player2Win' : 'player1Win';
       }
       
+      // 攻撃済みカードとして記録
+      const newAttackedCardsThisTurn = new Set(state.attackedCardsThisTurn);
+      newAttackedCardsThisTurn.add(cardId);
+      
       // 攻撃成功時のマナ増加
       const newAttackerMana = Math.min(attackerPlayer.maxMana, attackerPlayer.mana + manaGained);
 
@@ -185,7 +198,8 @@ const gameReducer = (state, action) => {
         },
         [defendingPlayer]: newDefenderState,
         gameStatus: newGameStatus,
-        battleLog: [...state.battleLog, logMessage]
+        battleLog: [...state.battleLog, logMessage],
+        attackedCardsThisTurn: newAttackedCardsThisTurn
       };
 
     case GAME_ACTIONS.END_TURN:
@@ -206,7 +220,8 @@ const gameReducer = (state, action) => {
         [state.currentTurn]: {
           ...currentPlayerForMana,
           mana: newManaAmount
-        }
+        },
+        attackedCardsThisTurn: new Set() // ターン終了時に攻撃済みカードをリセット
       };
 
     case GAME_ACTIONS.NEXT_PHASE:
@@ -263,7 +278,22 @@ const gameReducer = (state, action) => {
       };
 
     case GAME_ACTIONS.RESET_GAME:
-      return initialGameState;
+      const player1Deck = buildRecommendedDeck(1); // プレイヤーレベル1
+      const player2Deck = buildRecommendedDeck(1); // AIレベル1
+      
+      return {
+        ...initialGameState,
+        player1: {
+          ...initialGameState.player1,
+          deck: player1Deck.slice(5),
+          hand: player1Deck.slice(0, 5)
+        },
+        player2: {
+          ...initialGameState.player2,
+          deck: player2Deck.slice(5),
+          hand: player2Deck.slice(0, 5)
+        }
+      };
 
     default:
       return state;
@@ -367,9 +397,12 @@ export const GameProvider = ({ children }) => {
         // 攻撃前に最新のgameStateを取得
         const aiFieldCards = gameState.player2.field;
         for (const card of aiFieldCards) {
-          console.log("AI Turn: Attacking with card", card);
-          dispatch({ type: GAME_ACTIONS.ATTACK, attackingCard: card, defendingPlayer: 'player1' });
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          const cardId = `${card.id}-${card.word}`;
+          if (!gameState.attackedCardsThisTurn.has(cardId)) {
+            console.log("AI Turn: Attacking with card", card);
+            dispatch({ type: GAME_ACTIONS.ATTACK, attackingCard: card, defendingPlayer: 'player1' });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
 
         console.log("AI Turn: Ending Turn");

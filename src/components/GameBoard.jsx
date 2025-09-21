@@ -91,8 +91,11 @@ const GameBoard = () => {
   };
 
   const canAttack = (card) => {
+    const cardId = `${card.id}-${card.word}`;
+    const hasAttacked = gameState.attackedCardsThisTurn.has(cardId);
     return gameState.currentTurn === 'player1' && 
-           gameState.phase === 'battle';
+           gameState.phase === 'battle' && 
+           !hasAttacked;
   };
 
   if (gameState.gameStatus !== 'playing') {
@@ -207,12 +210,16 @@ const GameBoard = () => {
           <CardContent>
             <div className="flex gap-2 min-h-[120px]">
               {gameState.player1.field.map((card, index) => {
+                const cardId = `${card.id}-${card.word}`;
+                const hasAttacked = gameState.attackedCardsThisTurn.has(cardId);
+                
                 return (
                 <Card
                   key={card.id}
                   card={card}
                   showAnswer={true}
                   isPlayable={canAttack(card)}
+                  hasAttacked={hasAttacked}
                   onClick={() => canAttack(card) && handleAttack(card)}
                 />
                 );
