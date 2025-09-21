@@ -39,7 +39,7 @@ const initialGameState = {
   learnedWords: new Set(),
   reviewWords: new Set(),
   // 攻撃制限（ターンごとにリセット）
-  attackedCardsThisTurn: new Set() // カードIDのセット
+  attackedCardsThisTurn: new Set() // カードIDのセット（削除予定）
 };
 
 // アクションタイプ
@@ -108,6 +108,8 @@ const gameReducer = (state, action) => {
       
       // 正解の場合のみカードをプレイ
       if (isCorrect) {
+        console.log("PLAY_CARD: Correct answer, playing card", cardToPlay);
+
         const newHand = playingPlayerState.hand.filter((_, index) => index !== cardIndex);
         const newField = [...playingPlayerState.field, cardToPlay];
         const newMana = playingPlayerState.mana - cardToPlay.cost;
@@ -122,23 +124,23 @@ const gameReducer = (state, action) => {
           },
           battleLog: [...state.battleLog, `${cardToPlay.word}をプレイしました！`]
         };
+      } else {
+        // 不正解の場合、カードは手札から消え、マナは消費されない
+        const newHand = playingPlayerState.hand.filter((_, index) => index !== cardIndex);
+        return {
+          ...state,
+          [playingPlayer]: {
+            ...playingPlayerState,
+            hand: newHand,
+          },
+          battleLog: [...state.battleLog, `${cardToPlay.word}のクイズに失敗しました。カードは消滅します。`]
+        };
       }
-      
-      return state;
 
     case GAME_ACTIONS.ATTACK:
       const { attackingCard, defendingPlayer, defendingCardIndex } = action;
       const attackerPlayer = state[state.currentTurn];
       const defender = state[defendingPlayer];
-      
-      // 攻撃制限チェック（ターンごとに1回のみ）
-      const cardId = `${attackingCard.id}-${attackingCard.word}`;
-      if (state.attackedCardsThisTurn.has(cardId)) {
-        return {
-          ...state,
-          battleLog: [...state.battleLog, `${attackingCard.word}はすでにこのターン攻撃済みです！`]
-        };
-      }
       
       let damage = attackingCard.attack;
       let newDefenderState = { ...defender };
@@ -172,10 +174,6 @@ const gameReducer = (state, action) => {
         newGameStatus = defendingPlayer === 'player1' ? 'player2Win' : 'player1Win';
       }
       
-      // 攻撃済みカードとして記録
-      const newAttackedCardsThisTurn = new Set(state.attackedCardsThisTurn);
-      newAttackedCardsThisTurn.add(cardId);
-      
       // 攻撃成功時のマナ増加
       const newAttackerMana = Math.min(attackerPlayer.maxMana, attackerPlayer.mana + manaGained);
 
@@ -187,8 +185,7 @@ const gameReducer = (state, action) => {
         },
         [defendingPlayer]: newDefenderState,
         gameStatus: newGameStatus,
-        battleLog: [...state.battleLog, logMessage],
-        attackedCardsThisTurn: newAttackedCardsThisTurn
+        battleLog: [...state.battleLog, logMessage]
       };
 
     case GAME_ACTIONS.END_TURN:
@@ -209,8 +206,7 @@ const gameReducer = (state, action) => {
         [state.currentTurn]: {
           ...currentPlayerForMana,
           mana: newManaAmount
-        },
-        attackedCardsThisTurn: new Set() // ターン終了時に攻撃済みカードをリセット
+        }
       };
 
     case GAME_ACTIONS.NEXT_PHASE:
@@ -339,24 +335,26 @@ export const GameProvider = ({ children }) => {
   // AIのターン処理
   const processAITurn = () => {
     if (gameState.currentTurn === 'player2' && gameState.gameStatus === 'playing') {
-      // AIの行動を非同期で実行
-      const aiActions = async () => {
-        // ドローフェーズ
+        // AIの行動を非同期で実行
+        const aiActions = async () => {
+          console.log("AI Turn: Starting AI actions.");
+        console.log("AI Turn: Draw Phase");
         dispatch({ type: GAME_ACTIONS.DRAW_CARD, player: 'player2' });
         await new Promise(resolve => setTimeout(resolve, 500));
         dispatch({ type: GAME_ACTIONS.NEXT_PHASE }); // メインフェーズへ
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // メインフェーズ: カードをプレイ
-        let currentAIState = gameState; // 最新のgameStateを取得
+        console.log("AI Turn: Main Phase - Playing Cards");
+        // 最新のgameStateを取得するためにuseRefを使用する代わりに、
+        // 現在のgameStateを使用
         let playedCardThisTurn = false;
-        const playableCards = currentAIState.player2.hand.filter(card => card.cost <= currentAIState.player2.mana);
+        const playableCards = gameState.player2.hand.filter(card => card.cost <= gameState.player2.mana);
         
         if (playableCards.length > 0) {
-          // 最もコストの低いカードを優先的にプレイ
           playableCards.sort((a, b) => a.cost - b.cost);
           const cardToPlay = playableCards[0];
-          const cardIndex = currentAIState.player2.hand.indexOf(cardToPlay);
+          const cardIndex = gameState.player2.hand.indexOf(cardToPlay);
+          console.log("AI Turn: Playing card", cardToPlay);
           dispatch({ type: GAME_ACTIONS.PLAY_CARD, player: 'player2', cardIndex, isCorrect: true }); // AIは常に正解
           playedCardThisTurn = true;
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -365,23 +363,16 @@ export const GameProvider = ({ children }) => {
         dispatch({ type: GAME_ACTIONS.NEXT_PHASE }); // バトルフェーズへ
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // バトルフェーズ: 攻撃
-        // AIはフィールドのカードでプレイヤーを攻撃
-        let updatedState = gameState; // 攻撃前に最新のgameStateを取得
-        const aiFieldCards = updatedState.player2.field;
+        console.log("AI Turn: Battle Phase - Attacking");
+        // 攻撃前に最新のgameStateを取得
+        const aiFieldCards = gameState.player2.field;
         for (const card of aiFieldCards) {
-          const cardId = `${card.id}-${card.word}`;
-          if (!updatedState.attackedCardsThisTurn.has(cardId)) {
-            dispatch({ type: GAME_ACTIONS.ATTACK, attackingCard: card, defendingPlayer: 'player1' });
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            // dispatch後にgameStateが更新されるため、再度取得する必要があるが、
-            // ここでは簡易的に次のループのために更新された状態を考慮しない。
-            // 厳密には、dispatch後に状態を再取得するメカニズムが必要だが、
-            // AIの行動はシンプルなので、このままでも大きな問題はないと判断。
-          }
+          console.log("AI Turn: Attacking with card", card);
+          dispatch({ type: GAME_ACTIONS.ATTACK, attackingCard: card, defendingPlayer: 'player1' });
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
-        // ターン終了
+        console.log("AI Turn: Ending Turn");
         dispatch({ type: GAME_ACTIONS.END_TURN });
       };
       aiActions();

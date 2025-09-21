@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Zap, Clock, Trophy, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,17 @@ import { useGame } from '../contexts/GameContext';
 import Card from './Card';
 import QuizModal from './QuizModal';
 
+const boardReducer = (state, action) => {
+  switch (action.type) {
+    case 'SHOW_QUIZ':
+      return { ...state, showQuiz: true, selectedCardForQuiz: action.card, selectedCardIndex: action.cardIndex };
+    case 'HIDE_QUIZ':
+      return { ...state, showQuiz: false, selectedCardForQuiz: null, selectedCardIndex: null };
+    default:
+      return state;
+  }
+};
+
 const GameBoard = () => {
   const { 
     gameState, 
@@ -18,22 +29,21 @@ const GameBoard = () => {
     attack, 
     endTurn, 
     nextPhase, 
-    selectCard,
     resetGame 
   } = useGame();
 
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [selectedCardForQuiz, setSelectedCardForQuiz] = useState(null);
-  const [selectedCardIndex, setSelectedCardIndex] = useState(null);
+  const [boardState, dispatchBoard] = useReducer(boardReducer, {
+    showQuiz: false,
+    selectedCardForQuiz: null,
+    selectedCardIndex: null,
+  });
 
-  // ゲーム初期化
   useEffect(() => {
     if (gameState.player1.deck.length === 0) {
       initializeGame();
     }
   }, []);
 
-  // ターン開始時のカードドロー
   useEffect(() => {
     if (gameState.phase === 'draw' && gameState.currentTurn === 'player1') {
       drawCard('player1');
@@ -43,33 +53,18 @@ const GameBoard = () => {
 
   const handleCardPlay = (card, cardIndex) => {
     if (gameState.currentTurn !== 'player1' || gameState.phase !== 'main') return;
-    
-    setSelectedCardForQuiz(card);
-    setSelectedCardIndex(cardIndex);
-    setShowQuiz(true);
+    dispatchBoard({ type: 'SHOW_QUIZ', card, cardIndex });
   };
 
   const handleQuizAnswer = (isCorrect) => {
-    if (selectedCardForQuiz && selectedCardIndex !== null) {
-      playCard('player1', selectedCardIndex, isCorrect);
-      
-      // 特殊効果の処理
-      if (isCorrect && selectedCardForQuiz.partOfSpeech === 'noun') {
-        // 名詞の特殊効果: HP回復
-        const newHp = Math.min(gameState.player1.maxHp, gameState.player1.hp + 5);
-        // updateHP('player1', 5); // この機能は後で実装
-      }
+    if (boardState.selectedCardForQuiz && boardState.selectedCardIndex !== null) {
+      playCard('player1', boardState.selectedCardIndex, isCorrect);
     }
-    
-    setShowQuiz(false);
-    setSelectedCardForQuiz(null);
-    setSelectedCardIndex(null);
+    dispatchBoard({ type: 'HIDE_QUIZ' });
   };
 
   const handleAttack = (attackingCard) => {
     if (gameState.phase !== 'battle') return;
-    
-    // 相手に直接攻撃
     attack(attackingCard, 'player2');
   };
 
@@ -96,11 +91,8 @@ const GameBoard = () => {
   };
 
   const canAttack = (card) => {
-    const cardId = `${card.id}-${card.word}`;
-    const hasAttacked = gameState.attackedCardsThisTurn.has(cardId);
     return gameState.currentTurn === 'player1' && 
-           gameState.phase === 'battle' && 
-           !hasAttacked;
+           gameState.phase === 'battle';
   };
 
   if (gameState.gameStatus !== 'playing') {
@@ -132,39 +124,28 @@ const GameBoard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4">
-      {/* ヘッダー情報 */}
-      <div className="flex justify-between items-center mb-4">
+      {/* ゲーム情報 */}
+      <div className="mb-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <Badge variant="outline" className="text-lg px-3 py-1">
+          <Badge variant="outline" className="text-white">
             ターン {gameState.turnCount}
           </Badge>
-          <Badge className={`text-lg px-3 py-1 ${
-            gameState.currentTurn === 'player1' ? 'bg-blue-600' : 'bg-red-600'
-          }`}>
+          <Badge variant="outline" className={gameState.currentTurn === 'player1' ? 'bg-blue-600' : 'bg-red-600'}>
             {gameState.currentTurn === 'player1' ? 'あなたのターン' : 'AIのターン'}
           </Badge>
-          <Badge variant="outline" className="text-lg px-3 py-1">
-            {gameState.phase === 'main' ? 'メインフェーズ' : 
-             gameState.phase === 'battle' ? 'バトルフェーズ' : 
-             gameState.phase === 'draw' ? 'ドローフェーズ' : 'エンドフェーズ'}
+          <Badge variant="outline" className="text-white">
+            {gameState.phase === 'draw' ? 'ドロー' : 
+             gameState.phase === 'main' ? 'メイン' : 
+             gameState.phase === 'battle' ? 'バトル' : 'エンド'}フェーズ
           </Badge>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-green-400" />
-            <span className="text-white">
-              正答率: {gameState.totalQuestions > 0 ? Math.round((gameState.correctAnswers / gameState.totalQuestions) * 100) : 0}%
-            </span>
-          </div>
-          <Button variant="outline" onClick={resetGame}>
-            リセット
-          </Button>
-        </div>
+        <Button onClick={resetGame} variant="outline" size="sm">
+          リセット
+        </Button>
       </div>
 
-      {/* 相手（AI）エリア */}
-      <div className="mb-6">
+      {/* AIエリア */}
+      <div className="mb-4">
         <UICard className="bg-red-900/20 border-red-500/30">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-center">
@@ -173,35 +154,34 @@ const GameBoard = () => {
                 AI: {gameState.player2.hp}/{gameState.player2.maxHp}
               </CardTitle>
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-blue-400" />
-                <span className="text-blue-400">{gameState.player2.mana}</span>
+                <Zap className="w-4 h-4 text-red-400" />
+                <span className="text-red-400">{gameState.player2.mana}</span>
               </div>
             </div>
             <Progress value={(gameState.player2.hp / gameState.player2.maxHp) * 100} className="h-2" />
           </CardHeader>
-          <CardContent>
-            {/* AI手札（裏向き） */}
-            <div className="flex gap-2 mb-4">
-              {gameState.player2.hand.map((_, index) => (
-                <div key={index} className="w-16 h-24 bg-red-800 rounded border-2 border-red-600 flex items-center justify-center">
-                  <span className="text-red-400 text-xs">?</span>
-                </div>
-              ))}
-            </div>
-            
-            {/* AIフィールド */}
-            <div className="flex gap-2">
-              {gameState.player2.field.map((card, index) => (
-                <Card
-                  key={`ai-field-${index}`}
-                  card={card}
-                  showAnswer={true}
-                  isPlayable={false}
-                />
-              ))}
-            </div>
-          </CardContent>
         </UICard>
+      </div>
+
+      {/* AI手札（裏向き） */}
+      <div className="flex gap-2 mb-4">
+        {gameState.player2.hand.map((_, index) => (
+          <div key={index} className="w-16 h-24 bg-red-800 rounded border-2 border-red-600 flex items-center justify-center">
+            <span className="text-red-400 text-xs">?</span>
+          </div>
+        ))}
+      </div>
+      
+      {/* AIフィールド */}
+      <div className="flex gap-2 mb-6">
+        {gameState.player2.field.map((card, index) => (
+          <Card
+            key={card.id}
+            card={card}
+            showAnswer={true}
+            isPlayable={false}
+          />
+        ))}
       </div>
 
       {/* バトルログ */}
@@ -227,16 +207,12 @@ const GameBoard = () => {
           <CardContent>
             <div className="flex gap-2 min-h-[120px]">
               {gameState.player1.field.map((card, index) => {
-                const cardId = `${card.id}-${card.word}`;
-                const hasAttacked = gameState.attackedCardsThisGame.has(cardId);
-                
                 return (
                 <Card
-                  key={`player-field-${index}`}
+                  key={card.id}
                   card={card}
                   showAnswer={true}
                   isPlayable={canAttack(card)}
-                  hasAttacked={gameState.attackedCardsThisTurn.has(`${card.id}-${card.word}`)}
                   onClick={() => canAttack(card) && handleAttack(card)}
                 />
                 );
@@ -283,7 +259,7 @@ const GameBoard = () => {
             <div className="flex gap-2 justify-center">
               {gameState.player1.hand.map((card, index) => (
                 <Card
-                  key={`player-hand-${index}`}
+                  key={card.id}
                   card={card}
                   isPlayable={canPlayCard(card)}
                   onPlay={() => handleCardPlay(card, index)}
@@ -295,13 +271,12 @@ const GameBoard = () => {
         </UICard>
       </div>
 
-      {/* クイズモーダル */}
       <AnimatePresence>
-        {showQuiz && selectedCardForQuiz && (
+        {boardState.showQuiz && boardState.selectedCardForQuiz && (
           <QuizModal
-            card={selectedCardForQuiz}
+            card={boardState.selectedCardForQuiz}
             onAnswer={handleQuizAnswer}
-            onClose={() => setShowQuiz(false)}
+            onClose={() => dispatchBoard({ type: 'HIDE_QUIZ' })}
           />
         )}
       </AnimatePresence>
@@ -310,3 +285,4 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+

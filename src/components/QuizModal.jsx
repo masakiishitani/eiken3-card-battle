@@ -39,9 +39,10 @@ const QuizModal = ({ card, onAnswer, onClose }) => {
     setIsCorrect(correct);
     setShowResult(true);
 
-    // 2秒後に結果を返す
+    // 2秒後に結果を返し、その後モーダルを閉じる
     setTimeout(() => {
       onAnswer(correct);
+      onClose(); // onAnswerの後にonCloseを呼び出す
     }, 2000);
   };
 
