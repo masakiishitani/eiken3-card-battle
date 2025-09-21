@@ -278,20 +278,20 @@ const gameReducer = (state, action) => {
       };
 
     case GAME_ACTIONS.RESET_GAME:
-      const player1Deck = buildRecommendedDeck(1); // プレイヤーレベル1
-      const player2Deck = buildRecommendedDeck(1); // AIレベル1
+      const resetPlayer1Deck = buildRecommendedDeck(1); // プレイヤーレベル1
+      const resetPlayer2Deck = buildRecommendedDeck(1); // AIレベル1
       
       return {
         ...initialGameState,
         player1: {
           ...initialGameState.player1,
-          deck: player1Deck.slice(5),
-          hand: player1Deck.slice(0, 5)
+          deck: resetPlayer1Deck.slice(5),
+          hand: resetPlayer1Deck.slice(0, 5)
         },
         player2: {
           ...initialGameState.player2,
-          deck: player2Deck.slice(5),
-          hand: player2Deck.slice(0, 5)
+          deck: resetPlayer2Deck.slice(5),
+          hand: resetPlayer2Deck.slice(0, 5)
         }
       };
 
