@@ -116,3 +116,50 @@ npm run build
 
 **楽しく英単語を学んで、英検3級合格を目指しましょう！** 🎉
 
+
+## 🗄️ Supabase統合について
+
+### 概要
+このプロジェクトは、単語データの管理をSupabaseデータベースに移行しました。これにより、より柔軟で拡張性の高いデータ管理が可能になります。
+
+### 技術スタック
+- **データベース**: Supabase (PostgreSQL)
+- **API**: Supabase REST API
+- **認証**: Supabase Auth (将来実装予定)
+
+### データベース構成
+- **wordsテーブル**: 212個の英検3級レベルの単語データ
+- **フィールド**: id, word, meaning, part_of_speech, difficulty, attack, defense, mana_cost
+
+### 開発環境での設定
+
+#### 1. 環境変数の設定
+```bash
+export SUPABASE_URL="https://mqynayequlniqltafzly.supabase.co"
+export SUPABASE_ANON_KEY="your-anon-key"
+```
+
+#### 2. Supabaseクライアントの使用
+```javascript
+import { supabase } from './src/supabaseClient.js';
+
+// 単語データの取得
+const { data, error } = await supabase
+  .from('words')
+  .select('*')
+  .limit(10);
+```
+
+### 移行の詳細
+完全な移行プロセスについては、[SUPABASE_MIGRATION_GUIDE.md](./SUPABASE_MIGRATION_GUIDE.md) を参照してください。
+
+### セキュリティ
+- Row Level Security (RLS) が有効化されています
+- 読み取り専用のパブリックアクセスが許可されています
+- 書き込み操作は制限されています
+
+### トラブルシューティング
+Supabase関連の問題については、以下のファイルを参照してください：
+- [RLS設定手順](./rls_setup_instructions.md)
+- [移行ガイド](./SUPABASE_MIGRATION_GUIDE.md)
+
