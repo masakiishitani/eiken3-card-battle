@@ -29,7 +29,7 @@ const initialGameState = {
   currentTurn: 'player1',
   phase: 'draw', // draw, main, battle, end
   turnCount: 1,
-  gameStatus: 'playing', // playing, player1Win, player2Win, draw
+  gameStatus: 'playing', // playing, player1Win, player2Win, draw, loading
   selectedCard: null,
   targetCard: null,
   battleLog: [],
@@ -45,6 +45,7 @@ const initialGameState = {
 // アクションタイプ
 const GAME_ACTIONS = {
   INITIALIZE_GAME: 'INITIALIZE_GAME',
+  SET_DECKS: 'SET_DECKS',
   DRAW_CARD: 'DRAW_CARD',
   PLAY_CARD: 'PLAY_CARD',
   ATTACK: 'ATTACK',
@@ -78,6 +79,22 @@ const gameReducer = (state, action) => {
           deck: player2Deck.slice(5),
           hand: player2Deck.slice(0, 5)
         }
+      };
+
+    case GAME_ACTIONS.SET_DECKS:
+      return {
+        ...state,
+        player1: {
+          ...state.player1,
+          deck: action.player1Deck.slice(5),
+          hand: action.player1Deck.slice(0, 5)
+        },
+        player2: {
+          ...state.player2,
+          deck: action.player2Deck.slice(5),
+          hand: action.player2Deck.slice(0, 5)
+        },
+        gameStatus: 'playing'
       };
 
     case GAME_ACTIONS.DRAW_CARD:
@@ -125,19 +142,15 @@ const gameReducer = (state, action) => {
           battleLog: [...state.battleLog, `${cardToPlay.word}をプレイしました！`]
         };
       } else {
-        // 不正解の場合、カードは手札から消え、カードのコスト分のマナが消費される
+        // 不正解の場合、カードは手札から消え、マナは消費されない
         const newHand = playingPlayerState.hand.filter((_, index) => index !== cardIndex);
-        const manaPenalty = Math.min(cardToPlay.cost, playingPlayerState.mana); // 現在のマナを超えないように制限
-        const newMana = playingPlayerState.mana - manaPenalty;
-        
         return {
           ...state,
           [playingPlayer]: {
             ...playingPlayerState,
             hand: newHand,
-            mana: newMana
           },
-          battleLog: [...state.battleLog, `${cardToPlay.word}のクイズに失敗しました。カードは消滅し、マナ${manaPenalty}を失いました。`]
+          battleLog: [...state.battleLog, `${cardToPlay.word}のクイズに失敗しました。カードは消滅します。`]
         };
       }
 
@@ -214,27 +227,6 @@ const gameReducer = (state, action) => {
       const currentPlayerForMana = state[state.currentTurn];
       const newManaAmount = Math.min(currentPlayerForMana.maxMana, currentPlayerForMana.mana + 1);
       
-      // 攻撃済みカードをフィールドから削除し、墓地に送る
-      const attackedCardIds = Array.from(state.attackedCardsThisTurn);
-      const newPlayer1Field = state.player1.field.filter(card => {
-        const cardId = `${card.id}-${card.word}`;
-        return !attackedCardIds.includes(cardId);
-      });
-      const newPlayer2Field = state.player2.field.filter(card => {
-        const cardId = `${card.id}-${card.word}`;
-        return !attackedCardIds.includes(cardId);
-      });
-      
-      // 削除されたカードを墓地に送る
-      const removedPlayer1Cards = state.player1.field.filter(card => {
-        const cardId = `${card.id}-${card.word}`;
-        return attackedCardIds.includes(cardId);
-      });
-      const removedPlayer2Cards = state.player2.field.filter(card => {
-        const cardId = `${card.id}-${card.word}`;
-        return attackedCardIds.includes(cardId);
-      });
-      
       return {
         ...state,
         currentTurn: nextPlayer,
@@ -242,16 +234,6 @@ const gameReducer = (state, action) => {
         phase: 'draw',
         selectedCard: null,
         targetCard: null,
-        player1: {
-          ...state.player1,
-          field: newPlayer1Field,
-          graveyard: [...state.player1.graveyard, ...removedPlayer1Cards]
-        },
-        player2: {
-          ...state.player2,
-          field: newPlayer2Field,
-          graveyard: [...state.player2.graveyard, ...removedPlayer2Cards]
-        },
         [state.currentTurn]: {
           ...currentPlayerForMana,
           mana: newManaAmount
@@ -341,6 +323,11 @@ const GameContext = createContext();
 // ゲームプロバイダー
 export const GameProvider = ({ children }) => {
   const [gameState, dispatch] = useReducer(gameReducer, initialGameState);
+  const gameStateRef = useRef(gameState);
+
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   // ゲーム初期化
   const initializeGame = () => {
@@ -399,7 +386,8 @@ export const GameProvider = ({ children }) => {
 
   // AIのターン処理
   const processAITurn = () => {
-    if (gameState.currentTurn === 'player2' && gameState.gameStatus === 'playing') {
+    const currentState = gameStateRef.current; // useRefを使って最新の状態を取得
+    if (currentState.currentTurn === 'player2' && currentState.gameStatus === 'playing') {
       console.log("AI Turn: Starting AI turn processing");
       
       // ドローフェーズ
@@ -414,14 +402,14 @@ export const GameProvider = ({ children }) => {
           // メインフェーズでカードプレイ
           setTimeout(() => {
             console.log("AI Turn: Main Phase - Playing Cards");
-            // 現在の状態を再取得
-            const currentState = gameState;
-            const playableCards = currentState.player2.hand.filter(card => card.cost <= currentState.player2.mana);
+            // 最新の状態を取得
+            const latestState = gameStateRef.current;
+            const playableCards = latestState.player2.hand.filter(card => card.cost <= latestState.player2.mana);
             
             if (playableCards.length > 0) {
               playableCards.sort((a, b) => a.cost - b.cost);
               const cardToPlay = playableCards[0];
-              const cardIndex = currentState.player2.hand.indexOf(cardToPlay);
+              const cardIndex = latestState.player2.hand.indexOf(cardToPlay);
               console.log("AI Turn: Playing card", cardToPlay);
               dispatch({ type: GAME_ACTIONS.PLAY_CARD, player: 'player2', cardIndex, isCorrect: true });
             }
@@ -433,8 +421,8 @@ export const GameProvider = ({ children }) => {
               // バトルフェーズで攻撃
               setTimeout(() => {
                 console.log("AI Turn: Battle Phase - Attacking");
-                // 最新の状態を再取得
-                const battleState = gameState;
+                // 最新の状態を取得
+                const battleState = gameStateRef.current;
                 const aiFieldCards = battleState.player2.field;
                 
                 console.log("AI Field Cards:", aiFieldCards);
@@ -470,8 +458,10 @@ export const GameProvider = ({ children }) => {
 
   // AIターンの自動処理
   useEffect(() => {
-    processAITurn();
-  }, [gameState.currentTurn]);
+    if (gameState.currentTurn === 'player2' && gameState.gameStatus === 'playing') {
+      processAITurn();
+    }
+  }, [gameState.currentTurn, gameState.gameStatus]);
 
   const value = {
     gameState,

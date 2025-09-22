@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase接続テスト</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase接続テスト</h1>
+    <div id="result"></div>
+    
+    <script>
+        const supabaseUrl = 'https://mqynayequlniqltafzly.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xeW5heWVxdWxuaXFsdGFmemx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NTI4MjQsImV4cCI6MjA3NDEyODgyNH0.RV5rzh63T2_ONA3MIh7K3XHW_Wj4pt4poesNnYda0aQ';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        async function testConnection() {
+            try {
+                console.log('Supabaseに接続中...');
+                const { data, error } = await supabase
+                    .from('words')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) {
+                    console.error('エラー:', error);
+                    document.getElementById('result').innerHTML = `<p style="color: red;">エラー: ${error.message}</p>`;
+                } else {
+                    console.log('データ取得成功:', data);
+                    document.getElementById('result').innerHTML = `
+                        <p style="color: green;">接続成功！</p>
+                        <p>取得した単語数: ${data.length}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (err) {
+                console.error('予期しないエラー:', err);
+                document.getElementById('result').innerHTML = `<p style="color: red;">予期しないエラー: ${err.message}</p>`;
+            }
+        }
+        
+        testConnection();
+    </script>
+</body>
+</html>
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Zap, Clock, Trophy, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { useGame } from '../contexts/GameContext';
 import Card from './Card';
 import QuizModal from './QuizModal';
+import LoadingScreen from './LoadingScreen';
 
 const boardReducer = (state, action) => {
   switch (action.type) {
