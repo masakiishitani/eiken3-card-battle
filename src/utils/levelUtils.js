@@ -23,7 +23,7 @@ export const calculateCardStatsByLevel = (word, level) => {
     case 'eiken3':
       return calculateBalancedCardStats(word);
     case 'mixed':
-      // 元のIDが1000以下なら英検4級、それ以上なら英検3級として処理
+      // 元のIDが1000以下なら基礎レベル、それ以上なら標準レベルとして処理
       if (word.id <= 1000) {
         return calculateEiken4CardStats(word);
       } else {
