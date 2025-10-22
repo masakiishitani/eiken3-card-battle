@@ -33,6 +33,7 @@ const GameBoard = () => {
     attack, 
     endTurn, 
     nextPhase, 
+    answerQuestion,
     resetGame,
     setLevel
   } = useGame();
@@ -67,6 +68,9 @@ const GameBoard = () => {
 
   const handleQuizAnswer = (isCorrect) => {
     if (boardState.selectedCardForQuiz && boardState.selectedCardIndex !== null) {
+      // 学習記録を更新
+      answerQuestion(isCorrect, boardState.selectedCardForQuiz.id);
+      // カードをプレイ
       playCard('player1', boardState.selectedCardIndex, isCorrect);
     }
     dispatchBoard({ type: 'HIDE_QUIZ' });
