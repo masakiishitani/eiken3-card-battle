@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { eiken3Words } from '../data/wordData';
+import { extendedEiken3Words } from '../data/extendedWordData';
 
 const STORAGE_KEY = 'eiken3_learning_progress';
 
@@ -40,7 +40,7 @@ export const useLearningProgress = () => {
       // 初回起動：全英検3級単語を事前登録
       const initialData = {};
       
-      eiken3Words.forEach(word => {
+      extendedEiken3Words.forEach(word => {
         initialData[word.id] = {
           // 基本情報
           id: word.id,
