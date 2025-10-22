@@ -309,7 +309,7 @@ const GameBoard = () => {
           </CardHeader>
           <CardContent>
             {/* プレイヤー手札 */}
-            <div className="flex gap-2 justify-center">
+            <div className="flex gap-2 justify-center flex-wrap">
               {gameState.player1.hand.map((card, index) => (
                 <Card
                   key={card.id}
