@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { buildRecommendedDeck, calculateBalancedCardStats, extendedEiken3Words } from '../data/extendedWordData';
 import { eiken4Words, calculateEiken4CardStats } from '../data/eiken4WordData';
+import { buildLevelBasedDeck } from '../utils/levelUtils';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 
 // ゲーム状態の初期値
@@ -69,7 +70,6 @@ const GAME_ACTIONS = {
 const gameReducer = (state, action) => {
   switch (action.type) {
     case GAME_ACTIONS.INITIALIZE_GAME:
-      const { buildLevelBasedDeck } = require('../utils/levelUtils');
       const currentLevel = action.level || state.selectedLevel;
       const player1Deck = buildLevelBasedDeck(currentLevel, 1); // プレイヤーレベル1
       const player2Deck = buildLevelBasedDeck(currentLevel, 1); // AIレベル1
