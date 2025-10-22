@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Zap, Clock, Trophy, BookOpen, BarChart3, HelpCircle, Settings } from 'lucide-react';
+import { Heart, Zap, Clock, Trophy, BookOpen, BarChart3, HelpCircle, Settings, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card as UICard, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -356,6 +356,19 @@ const GameBoard = () => {
         isOpen={showHowToPlay}
         onClose={() => setShowHowToPlay(false)}
       />
+      
+      {/* フッター */}
+      <footer className="mt-8 pb-4 text-center text-sm text-gray-400">
+        <a 
+          href="https://github.com/masakiishitani/eiken3-card-battle" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 hover:text-gray-300 transition-colors"
+        >
+          <Github className="w-4 h-4" />
+          About / GitHub
+        </a>
+      </footer>
     </div>
   );
 };
