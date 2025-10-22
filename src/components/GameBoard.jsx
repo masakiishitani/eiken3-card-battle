@@ -139,7 +139,7 @@ const GameBoard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4 overflow-x-hidden">
       {/* ゲーム情報 */}
       <div className="mb-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
