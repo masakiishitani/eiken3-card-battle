@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useReducer, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Zap, Clock, Trophy, BookOpen } from 'lucide-react';
+import { Heart, Zap, Clock, Trophy, BookOpen, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card as UICard, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { useGame } from '../contexts/GameContext';
 import Card from './Card';
 import QuizModal from './QuizModal';
+import LearningProgressModal from './LearningProgressModal';
 
 const boardReducer = (state, action) => {
   switch (action.type) {
@@ -37,6 +38,8 @@ const GameBoard = () => {
     selectedCardForQuiz: null,
     selectedCardIndex: null,
   });
+  
+  const [showLearningProgress, setShowLearningProgress] = useState(false);
 
   useEffect(() => {
     if (gameState.player1.deck.length === 0) {
@@ -142,9 +145,20 @@ const GameBoard = () => {
              gameState.phase === 'battle' ? 'バトル' : 'エンド'}フェーズ
           </Badge>
         </div>
-        <Button onClick={resetGame} variant="outline" size="sm">
-          リセット
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => setShowLearningProgress(true)} 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <BarChart3 className="w-4 h-4" />
+            学習記録
+          </Button>
+          <Button onClick={resetGame} variant="outline" size="sm">
+            リセット
+          </Button>
+        </div>
       </div>
 
       {/* AIエリア */}
@@ -287,6 +301,12 @@ const GameBoard = () => {
           />
         )}
       </AnimatePresence>
+      
+      {/* 学習進捗モーダル */}
+      <LearningProgressModal 
+        isOpen={showLearningProgress}
+        onClose={() => setShowLearningProgress(false)}
+      />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { buildRecommendedDeck, calculateBalancedCardStats } from '../data/extendedWordData';
+import { useLearningProgress } from '../hooks/useLearningProgress';
 
 // ゲーム状態の初期値
 const initialGameState = {
@@ -286,6 +287,11 @@ const gameReducer = (state, action) => {
         newReviewWords.add(wordId);
       }
       
+      // 学習進捗を記録（外部から注入される関数を使用）
+      if (state.recordLearningAttempt) {
+        state.recordLearningAttempt(wordId, correct);
+      }
+      
       return {
         ...state,
         correctAnswers: state.correctAnswers + (correct ? 1 : 0),
@@ -338,11 +344,17 @@ const gameReducer = (state, action) => {
 // ゲームコンテキスト
 const GameContext = createContext();
 
-// ゲームプロバイダー
+// ゲームプロバイダーコンポーネント
 export const GameProvider = ({ children }) => {
   const [gameState, dispatch] = useReducer(gameReducer, initialGameState);
-
-  // ゲーム初期化
+  const { recordLearningAttempt, isInitialized } = useLearningProgress();
+  
+  // 学習記録関数をゲーム状態に注入
+  useEffect(() => {
+    if (isInitialized) {
+      gameState.recordLearningAttempt = recordLearningAttempt;
+    }
+  }, [isInitialized, recordLearningAttempt]);  // ゲーム初期化
   const initializeGame = () => {
     dispatch({ type: GAME_ACTIONS.INITIALIZE_GAME });
   };
