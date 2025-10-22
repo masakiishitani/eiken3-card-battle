@@ -1,6 +1,6 @@
-import React, { useReducer, useEffect, useState } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Zap, Clock, Trophy, BookOpen, BarChart3, HelpCircle } from 'lucide-react';
+import { Heart, Zap, Clock, Trophy, BookOpen, BarChart3, HelpCircle, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card as UICard, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,8 @@ import Card from './Card';
 import QuizModal from './QuizModal';
 import LearningProgressModal from './LearningProgressModal';
 import HowToPlayModal from './HowToPlayModal';
+import LevelSelectModal from './LevelSelectModal';
+import { getLevelInfo } from '../utils/levelUtils';
 
 const boardReducer = (state, action) => {
   switch (action.type) {
@@ -31,7 +33,8 @@ const GameBoard = () => {
     attack, 
     endTurn, 
     nextPhase, 
-    resetGame 
+    resetGame,
+    setLevel
   } = useGame();
 
   const [boardState, dispatchBoard] = useReducer(boardReducer, {
@@ -42,6 +45,7 @@ const GameBoard = () => {
   
   const [showLearningProgress, setShowLearningProgress] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showLevelSelect, setShowLevelSelect] = useState(false);
 
   useEffect(() => {
     if (gameState.player1.deck.length === 0) {
@@ -148,6 +152,19 @@ const GameBoard = () => {
           </Badge>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => setShowLevelSelect(true)} 
+            variant="outline" 
+            size="sm"
+            className={`flex items-center gap-2 ${
+              getLevelInfo(gameState.selectedLevel).color === 'green' ? 'border-green-500 text-green-500' :
+              getLevelInfo(gameState.selectedLevel).color === 'blue' ? 'border-blue-500 text-blue-500' :
+              'border-purple-500 text-purple-500'
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            {getLevelInfo(gameState.selectedLevel).name}
+          </Button>
           <Button 
             onClick={() => setShowHowToPlay(true)} 
             variant="outline" 
@@ -312,6 +329,17 @@ const GameBoard = () => {
           />
         )}
       </AnimatePresence>
+      
+      {/* レベル選択モーダル */}
+      <LevelSelectModal
+        isOpen={showLevelSelect}
+        onClose={() => setShowLevelSelect(false)}
+        onSelectLevel={(level) => {
+          setLevel(level);
+          initializeGame();
+        }}
+        currentLevel={gameState.selectedLevel}
+      />
       
       {/* 学習進捗モーダル */}
       <LearningProgressModal 

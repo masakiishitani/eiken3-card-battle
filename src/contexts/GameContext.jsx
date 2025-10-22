@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { buildRecommendedDeck, calculateBalancedCardStats } from '../data/extendedWordData';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import { buildRecommendedDeck, calculateBalancedCardStats, extendedEiken3Words } from '../data/extendedWordData';
+import { eiken4Words, calculateEiken4CardStats } from '../data/eiken4WordData';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 
 // ゲーム状態の初期値
@@ -40,7 +41,10 @@ const initialGameState = {
   learnedWords: new Set(),
   reviewWords: new Set(),
   // 攻撃制限（ターンごとにリセット）
-  attackedCardsThisTurn: new Set() // カードIDのセット
+  attackedCardsThisTurn: new Set(), // カードIDのセット
+  // レベル選択
+  selectedLevel: 'eiken3', // eiken4, eiken3, mixed
+  availableWords: []
 };
 
 // アクションタイプ
@@ -57,18 +61,22 @@ const GAME_ACTIONS = {
   ADD_TO_LOG: 'ADD_TO_LOG',
   RESET_GAME: 'RESET_GAME',
   RESET_ATTACKED_CARDS: 'RESET_ATTACKED_CARDS',
-  GAIN_MANA: 'GAIN_MANA'
+  GAIN_MANA: 'GAIN_MANA',
+  SET_LEVEL: 'SET_LEVEL'
 };
 
 // ゲーム状態のリデューサー
 const gameReducer = (state, action) => {
   switch (action.type) {
     case GAME_ACTIONS.INITIALIZE_GAME:
-      const player1Deck = buildRecommendedDeck(1); // プレイヤーレベル1
-      const player2Deck = buildRecommendedDeck(1); // AIレベル1
+      const { buildLevelBasedDeck } = require('../utils/levelUtils');
+      const currentLevel = action.level || state.selectedLevel;
+      const player1Deck = buildLevelBasedDeck(currentLevel, 1); // プレイヤーレベル1
+      const player2Deck = buildLevelBasedDeck(currentLevel, 1); // AIレベル1
       
       return {
         ...initialGameState,
+        selectedLevel: currentLevel,
         player1: {
           ...initialGameState.player1,
           deck: player1Deck.slice(5),
@@ -336,6 +344,12 @@ const gameReducer = (state, action) => {
         }
       };
 
+    case GAME_ACTIONS.SET_LEVEL:
+      return {
+        ...state,
+        selectedLevel: action.level
+      };
+
     default:
       return state;
   }
@@ -407,6 +421,11 @@ export const GameProvider = ({ children }) => {
   // ゲームリセット
   const resetGame = () => {
     dispatch({ type: GAME_ACTIONS.RESET_GAME });
+  };
+
+  // レベル設定
+  const setLevel = (level) => {
+    dispatch({ type: GAME_ACTIONS.SET_LEVEL, level });
   };
 
   // AIのターン処理
@@ -497,7 +516,8 @@ export const GameProvider = ({ children }) => {
     answerQuestion,
     updateHP,
     addToLog,
-    resetGame
+    resetGame,
+    setLevel
   };
 
   return (
