@@ -81,22 +81,22 @@ export const buildLevelBasedDeck = (level, playerLevel = 1) => {
 export const getLevelInfo = (level) => {
   const levelData = {
     eiken4: {
-      name: '英検4級',
-      description: '基礎レベル',
+      name: '基礎レベル',
+      description: '英検4級相当',
       wordCount: 300,
       difficulty: 1,
       color: 'green'
     },
     eiken3: {
-      name: '英検3級',
-      description: '標準レベル',
+      name: '標準レベル',
+      description: '英検3級相当',
       wordCount: 365,
       difficulty: 2,
       color: 'blue'
     },
     mixed: {
       name: '混合モード',
-      description: '4級+3級',
+      description: '全レベル',
       wordCount: 665,
       difficulty: 3,
       color: 'purple'

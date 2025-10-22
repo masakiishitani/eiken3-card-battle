@@ -1,4 +1,4 @@
-// 英検3級単語データ
+// 標準レベルの英単語データ（英検3級相当）
 export const eiken3Words = [
   // 基本動詞
   { id: 1, word: "be", meaning: "～である、いる", partOfSpeech: "verb", difficulty: 1 },

@@ -16,7 +16,7 @@ const HowToPlayModal = ({ isOpen, onClose }) => {
       icon: <Trophy className="w-8 h-8 text-yellow-500" />,
       content: (
         <div className="space-y-4">
-          <p className="text-lg">英検3級の英単語を覚えながら、AIとカードバトルを楽しもう！</p>
+          <p className="text-lg">英単語を覚えながら、AIとカードバトルを楽しもう！</p>
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-semibold mb-2">勝利条件</h4>
             <p>相手のHPを0にすると勝利です</p>

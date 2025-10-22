@@ -7,8 +7,8 @@ const LevelSelectModal = ({ isOpen, onClose, onSelectLevel, currentLevel }) => {
   const levels = [
     {
       id: 'eiken4',
-      name: '英検4級',
-      description: '基礎レベル',
+      name: '基礎レベル',
+      description: '英検4級相当',
       wordCount: '300語',
       difficulty: '★☆☆',
       color: 'bg-green-500',
@@ -17,8 +17,8 @@ const LevelSelectModal = ({ isOpen, onClose, onSelectLevel, currentLevel }) => {
     },
     {
       id: 'eiken3',
-      name: '英検3級',
-      description: '標準レベル',
+      name: '標準レベル',
+      description: '英検3級相当',
       wordCount: '365語',
       difficulty: '★★☆',
       color: 'bg-blue-500',
@@ -28,7 +28,7 @@ const LevelSelectModal = ({ isOpen, onClose, onSelectLevel, currentLevel }) => {
     {
       id: 'mixed',
       name: '混合モード',
-      description: '4級+3級',
+      description: '全レベル',
       wordCount: '665語',
       difficulty: '★★★',
       color: 'bg-purple-500',
@@ -139,8 +139,8 @@ const LevelSelectModal = ({ isOpen, onClose, onSelectLevel, currentLevel }) => {
           <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <h4 className="font-semibold text-yellow-800 mb-2">📝 レベル選択について</h4>
             <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• 英検4級：初心者や基礎を固めたい方におすすめ</li>
-              <li>• 英検3級：中学生レベルの標準的な学習に最適</li>
+              <li>• 基礎レベル：初心者や基礎を固めたい方におすすめ</li>
+              <li>• 標準レベル：中学生レベルの標準的な学習に最適</li>
               <li>• 混合モード：両方のレベルからランダムに出題される上級者向け</li>
               <li>• 学習進捗はレベル別に個別管理されます</li>
             </ul>

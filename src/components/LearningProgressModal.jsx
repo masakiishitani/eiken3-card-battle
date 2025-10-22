@@ -107,7 +107,7 @@ const LearningProgressModal = ({ isOpen, onClose }) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
-                英検3級単語 習得状況
+                英単語 習得状況
               </CardTitle>
             </CardHeader>
             <CardContent>

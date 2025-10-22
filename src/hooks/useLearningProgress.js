@@ -29,7 +29,7 @@ export const useLearningProgress = () => {
   const [learningData, setLearningData] = useState({});
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // 初期化：英検3級単語を事前登録
+  // 初期化：英単語データを事前登録
   const initializeLearningData = () => {
     const existingData = localStorage.getItem(STORAGE_KEY);
     
@@ -37,7 +37,7 @@ export const useLearningProgress = () => {
       // 既存データがある場合は読み込み
       setLearningData(JSON.parse(existingData));
     } else {
-      // 初回起動：全英検3級単語を事前登録
+      // 初回起動：全英単語を事前登録
       const initialData = {};
       
       extendedEiken3Words.forEach(word => {

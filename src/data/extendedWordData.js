@@ -1,6 +1,6 @@
-// 拡張された英検3級単語データ
+// 標準レベルの英単語データ（英検3級相当）
 export const extendedEiken3Words = [
-  // 基本動詞 (30語) - 英検3級レベルに調整
+  // 基本動詞 (30語)
   { id: 1, word: "be", meaning: "～である、いる", partOfSpeech: "verb", difficulty: 2 },
   { id: 2, word: "do", meaning: "する", partOfSpeech: "verb", difficulty: 2 },
   { id: 3, word: "have", meaning: "持つ", partOfSpeech: "verb", difficulty: 2 },
@@ -37,7 +37,7 @@ export const extendedEiken3Words = [
   { id: 34, word: "visit", meaning: "訪問する", partOfSpeech: "verb", difficulty: 3 },
   { id: 35, word: "travel", meaning: "旅行する", partOfSpeech: "verb", difficulty: 3 },
 
-  // 基本名詞 (40語) - 英検3級レベルに調整
+  // 基本名詞 (40語)
   { id: 36, word: "time", meaning: "時間", partOfSpeech: "noun", difficulty: 2 },
   { id: 37, word: "year", meaning: "年", partOfSpeech: "noun", difficulty: 2 },
   { id: 38, word: "day", meaning: "日", partOfSpeech: "noun", difficulty: 2 },
@@ -79,7 +79,7 @@ export const extendedEiken3Words = [
   { id: 74, word: "people", meaning: "人々", partOfSpeech: "noun", difficulty: 2 },
   { id: 75, word: "person", meaning: "人", partOfSpeech: "noun", difficulty: 2 },
 
-  // 基本形容詞 (30語) - 英検3級レベルに調整
+  // 基本形容詞 (30語)
   { id: 76, word: "good", meaning: "良い", partOfSpeech: "adjective", difficulty: 2 },
   { id: 77, word: "bad", meaning: "悪い", partOfSpeech: "adjective", difficulty: 2 },
   { id: 78, word: "big", meaning: "大きい", partOfSpeech: "adjective", difficulty: 2 },
