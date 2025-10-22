@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Zap, Clock, Trophy, BookOpen, BarChart3 } from 'lucide-react';
+import { Heart, Zap, Clock, Trophy, BookOpen, BarChart3, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card as UICard, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { useGame } from '../contexts/GameContext';
 import Card from './Card';
 import QuizModal from './QuizModal';
 import LearningProgressModal from './LearningProgressModal';
+import HowToPlayModal from './HowToPlayModal';
 
 const boardReducer = (state, action) => {
   switch (action.type) {
@@ -40,6 +41,7 @@ const GameBoard = () => {
   });
   
   const [showLearningProgress, setShowLearningProgress] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   useEffect(() => {
     if (gameState.player1.deck.length === 0) {
@@ -146,6 +148,15 @@ const GameBoard = () => {
           </Badge>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => setShowHowToPlay(true)} 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <HelpCircle className="w-4 h-4" />
+            遊び方
+          </Button>
           <Button 
             onClick={() => setShowLearningProgress(true)} 
             variant="outline" 
@@ -306,6 +317,12 @@ const GameBoard = () => {
       <LearningProgressModal 
         isOpen={showLearningProgress}
         onClose={() => setShowLearningProgress(false)}
+      />
+      
+      {/* 遊び方モーダル */}
+      <HowToPlayModal 
+        isOpen={showHowToPlay}
+        onClose={() => setShowHowToPlay(false)}
       />
     </div>
   );
