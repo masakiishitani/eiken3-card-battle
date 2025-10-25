@@ -428,12 +428,15 @@ export const GameProvider = ({ children }) => {
     dispatch({ type: GAME_ACTIONS.SET_LEVEL, level });
   };
 
-  // AIのターン処理は削除（useEffectで個別に処理）
-
-  // AI処理の重複実行を防ぐためのRef
+  // AIのターン処理は削除（useEffectで個別に処理  // AI処理済みフェーズを記録するためのuseRef
   const aiProcessedPhase = useRef(null);
-
-  // ターンが変わったらフラグをリセット
+  // 最新のgameStateを保持するためのuseRef
+  const gameStateRef = useRef(gameState);
+  
+  // gameStateが更新されるたびにrefを更新
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]); // ターンが変わったらフラグをリセット
   useEffect(() => {
     aiProcessedPhase.current = null;
   }, [gameState.turnCount]);
@@ -492,12 +495,18 @@ export const GameProvider = ({ children }) => {
       console.log("Attacked Cards This Turn:", gameState.attackedCardsThisTurn);
       
       setTimeout(() => {
-        const aiFieldCards = gameState.player2.field;
+        // 最新の状態をrefから取得
+        const currentState = gameStateRef.current;
+        const aiFieldCards = currentState.player2.field;
+        const attackedCards = currentState.attackedCardsThisTurn;
+        
+        console.log("AI Field Cards (from ref):", aiFieldCards);
+        console.log("Attacked Cards This Turn:", attackedCards);
         
         if (aiFieldCards && aiFieldCards.length > 0) {
           aiFieldCards.forEach((card, index) => {
             const cardId = `${card.id}-${card.word}`;
-            if (!gameState.attackedCardsThisTurn.has(cardId)) {
+            if (!attackedCards.has(cardId)) {
               console.log("AI Turn: Attacking with card", card);
               setTimeout(() => {
                 dispatch({ type: GAME_ACTIONS.ATTACK, attackingCard: card, defendingPlayer: 'player1' });
@@ -509,7 +518,7 @@ export const GameProvider = ({ children }) => {
         }
         
         // ターン終了
-        const attackDelay = aiFieldCards.length > 0 ? aiFieldCards.length * 500 + 1000 : 1000;
+        const attackDelay = aiFieldCards && aiFieldCards.length > 0 ? aiFieldCards.length * 500 + 1000 : 1000;
         setTimeout(() => {
           console.log("AI Turn: Ending Turn");
           dispatch({ type: GAME_ACTIONS.END_TURN });
