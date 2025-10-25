@@ -482,7 +482,7 @@ export const GameProvider = ({ children }) => {
         }, 500);
       }
     }
-  }, [gameState.currentTurn, gameState.phase, gameState.turnCount, gameState.player2.hand, gameState.player2.mana]);
+  }, [gameState.currentTurn, gameState.phase, gameState.turnCount, gameState.gameStatus]);
 
   // AIターン: フィールドにカードが追加されたらバトルフェーズへ移行
   useEffect(() => {
