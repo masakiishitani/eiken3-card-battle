@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { buildRecommendedDeck, calculateBalancedCardStats, extendedEiken3Words } from '../data/extendedWordData';
 import { eiken4Words, calculateEiken4CardStats } from '../data/eiken4WordData';
 import { buildLevelBasedDeck } from '../utils/levelUtils';
@@ -430,9 +430,19 @@ export const GameProvider = ({ children }) => {
 
   // AIのターン処理は削除（useEffectで個別に処理）
 
+  // AI処理の重複実行を防ぐためのRef
+  const aiProcessedPhase = useRef(null);
+
+  // ターンが変わったらフラグをリセット
+  useEffect(() => {
+    aiProcessedPhase.current = null;
+  }, [gameState.turnCount]);
+
   // AIターン: ドローフェーズ
   useEffect(() => {
-    if (gameState.currentTurn === 'player2' && gameState.phase === 'draw' && gameState.gameStatus === 'playing') {
+    const phaseKey = `${gameState.turnCount}-draw`;
+    if (gameState.currentTurn === 'player2' && gameState.phase === 'draw' && gameState.gameStatus === 'playing' && aiProcessedPhase.current !== phaseKey) {
+      aiProcessedPhase.current = phaseKey;
       console.log("AI Turn: Draw Phase");
       setTimeout(() => {
         dispatch({ type: GAME_ACTIONS.DRAW_CARD, player: 'player2' });
@@ -441,11 +451,13 @@ export const GameProvider = ({ children }) => {
         }, 500);
       }, 500);
     }
-  }, [gameState.currentTurn, gameState.phase]);
+  }, [gameState.currentTurn, gameState.phase, gameState.turnCount]);
 
   // AIターン: メインフェーズ
   useEffect(() => {
-    if (gameState.currentTurn === 'player2' && gameState.phase === 'main' && gameState.gameStatus === 'playing') {
+    const phaseKey = `${gameState.turnCount}-main`;
+    if (gameState.currentTurn === 'player2' && gameState.phase === 'main' && gameState.gameStatus === 'playing' && aiProcessedPhase.current !== phaseKey) {
+      aiProcessedPhase.current = phaseKey;
       console.log("AI Turn: Main Phase - Playing Cards");
       setTimeout(() => {
         const playableCards = gameState.player2.hand.filter(card => card.cost <= gameState.player2.mana);
@@ -460,14 +472,16 @@ export const GameProvider = ({ children }) => {
         
         setTimeout(() => {
           dispatch({ type: GAME_ACTIONS.NEXT_PHASE });
-        }, 1000);
+        }, 1500); // 1.5秒に延長してカードがフィールドに追加されるのを待つ
       }, 500);
     }
-  }, [gameState.currentTurn, gameState.phase]);
+  }, [gameState.currentTurn, gameState.phase, gameState.turnCount]);
 
   // AIターン: バトルフェーズ
   useEffect(() => {
-    if (gameState.currentTurn === 'player2' && gameState.phase === 'battle' && gameState.gameStatus === 'playing') {
+    const phaseKey = `${gameState.turnCount}-battle`;
+    if (gameState.currentTurn === 'player2' && gameState.phase === 'battle' && gameState.gameStatus === 'playing' && aiProcessedPhase.current !== phaseKey) {
+      aiProcessedPhase.current = phaseKey;
       console.log("AI Turn: Battle Phase - Attacking");
       console.log("AI Field Cards:", gameState.player2.field);
       console.log("Attacked Cards This Turn:", gameState.attackedCardsThisTurn);
@@ -497,7 +511,7 @@ export const GameProvider = ({ children }) => {
         }, attackDelay);
       }, 500);
     }
-  }, [gameState.currentTurn, gameState.phase]);
+  }, [gameState.currentTurn, gameState.phase, gameState.turnCount]);
 
   const value = {
     gameState,
