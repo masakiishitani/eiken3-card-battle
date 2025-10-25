@@ -454,16 +454,12 @@ export const GameProvider = ({ children }) => {
   }, [gameState.currentTurn, gameState.phase, gameState.turnCount]);
 
   // AIターン: メインフェーズ
-  const aiFieldSizeRef = useRef(0);
-  
   useEffect(() => {
     const phaseKey = `${gameState.turnCount}-main`;
     if (gameState.currentTurn === 'player2' && gameState.phase === 'main' && gameState.gameStatus === 'playing' && aiProcessedPhase.current !== phaseKey) {
       aiProcessedPhase.current = phaseKey;
       console.log("AI Turn: Main Phase - Playing Cards");
-      
-      // 現在のフィールドサイズを記録
-      aiFieldSizeRef.current = gameState.player2.field.length;
+      console.log("AI Turn: Current field size:", gameState.player2.field.length);
       
       setTimeout(() => {
         const playableCards = gameState.player2.hand.filter(card => card.cost <= gameState.player2.mana);
@@ -474,30 +470,17 @@ export const GameProvider = ({ children }) => {
           const cardIndex = gameState.player2.hand.indexOf(cardToPlay);
           console.log("AI Turn: Playing card", cardToPlay);
           dispatch({ type: GAME_ACTIONS.PLAY_CARD, player: 'player2', cardIndex, isCorrect: true });
-          // フィールドの変化を監視するため、ここではNEXT_PHASEを呼ばない
-        } else {
-          // プレイできるカードがない場合はすぐにバトルフェーズへ
-          setTimeout(() => {
-            dispatch({ type: GAME_ACTIONS.NEXT_PHASE });
-          }, 500);
         }
+        
+        // カードプレイ後、3秒待ってからバトルフェーズへ
+        setTimeout(() => {
+          console.log("AI Turn: Moving to battle phase after card play");
+          console.log("AI Turn: Field size after wait:", gameState.player2.field.length);
+          dispatch({ type: GAME_ACTIONS.NEXT_PHASE });
+        }, 3000);
       }, 500);
     }
   }, [gameState.currentTurn, gameState.phase, gameState.turnCount]);
-  
-  // AIターン: フィールドの変化を監視してバトルフェーズへ移行
-  useEffect(() => {
-    if (gameState.currentTurn === 'player2' && gameState.phase === 'main' && gameState.gameStatus === 'playing') {
-      // フィールドにカードが追加されたことを確認
-      if (gameState.player2.field.length > aiFieldSizeRef.current) {
-        console.log("AI Turn: Field updated, moving to battle phase");
-        console.log("AI Field Cards after update:", gameState.player2.field);
-        setTimeout(() => {
-          dispatch({ type: GAME_ACTIONS.NEXT_PHASE });
-        }, 500);
-      }
-    }
-  }, [gameState.player2.field.length, gameState.currentTurn, gameState.phase]);
 
   // AIターン: バトルフェーズ
   useEffect(() => {
