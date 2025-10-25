@@ -428,81 +428,76 @@ export const GameProvider = ({ children }) => {
     dispatch({ type: GAME_ACTIONS.SET_LEVEL, level });
   };
 
-  // AIのターン処理
-  const processAITurn = () => {
-    if (gameState.currentTurn === 'player2' && gameState.gameStatus === 'playing') {
-      console.log("AI Turn: Starting AI turn processing");
-      
-      // ドローフェーズ
+  // AIのターン処理は削除（useEffectで個別に処理）
+
+  // AIターン: ドローフェーズ
+  useEffect(() => {
+    if (gameState.currentTurn === 'player2' && gameState.phase === 'draw' && gameState.gameStatus === 'playing') {
+      console.log("AI Turn: Draw Phase");
       setTimeout(() => {
-        console.log("AI Turn: Draw Phase");
         dispatch({ type: GAME_ACTIONS.DRAW_CARD, player: 'player2' });
-        
-        // メインフェーズへ移行
         setTimeout(() => {
           dispatch({ type: GAME_ACTIONS.NEXT_PHASE });
-          
-          // メインフェーズでカードプレイ
-          setTimeout(() => {
-            console.log("AI Turn: Main Phase - Playing Cards");
-            // 現在の状態を再取得
-            const currentState = gameState;
-            const playableCards = currentState.player2.hand.filter(card => card.cost <= currentState.player2.mana);
-            
-            if (playableCards.length > 0) {
-              playableCards.sort((a, b) => a.cost - b.cost);
-              const cardToPlay = playableCards[0];
-              const cardIndex = currentState.player2.hand.indexOf(cardToPlay);
-              console.log("AI Turn: Playing card", cardToPlay);
-              dispatch({ type: GAME_ACTIONS.PLAY_CARD, player: 'player2', cardIndex, isCorrect: true });
-            }
-            
-            // バトルフェーズへ移行
-            setTimeout(() => {
-              dispatch({ type: GAME_ACTIONS.NEXT_PHASE });
-              
-              // バトルフェーズで攻撃
-              setTimeout(() => {
-                console.log("AI Turn: Battle Phase - Attacking");
-                // 最新の状態を再取得
-                const battleState = gameState;
-                const aiFieldCards = battleState.player2.field;
-                
-                console.log("AI Field Cards:", aiFieldCards);
-                console.log("Attacked Cards This Turn:", battleState.attackedCardsThisTurn);
-                
-                if (aiFieldCards && aiFieldCards.length > 0) {
-                  aiFieldCards.forEach((card, index) => {
-                    const cardId = `${card.id}-${card.word}`;
-                    if (!battleState.attackedCardsThisTurn.has(cardId)) {
-                      console.log("AI Turn: Attacking with card", card);
-                      setTimeout(() => {
-                        dispatch({ type: GAME_ACTIONS.ATTACK, attackingCard: card, defendingPlayer: 'player1' });
-                      }, index * 500);
-                    } else {
-                      console.log("AI Turn: Card already attacked this turn", card);
-                    }
-                  });
-                }
-                
-                // ターン終了
-                setTimeout(() => {
-                  console.log("AI Turn: Ending Turn");
-                  dispatch({ type: GAME_ACTIONS.END_TURN });
-                }, aiFieldCards.length * 500 + 1000);
-                
-              }, 500);
-            }, 1000);
-          }, 500);
         }, 500);
       }, 500);
     }
-  };
+  }, [gameState.currentTurn, gameState.phase]);
 
-  // AIターンの自動処理
+  // AIターン: メインフェーズ
   useEffect(() => {
-    processAITurn();
-  }, [gameState.currentTurn]);
+    if (gameState.currentTurn === 'player2' && gameState.phase === 'main' && gameState.gameStatus === 'playing') {
+      console.log("AI Turn: Main Phase - Playing Cards");
+      setTimeout(() => {
+        const playableCards = gameState.player2.hand.filter(card => card.cost <= gameState.player2.mana);
+        
+        if (playableCards.length > 0) {
+          playableCards.sort((a, b) => a.cost - b.cost);
+          const cardToPlay = playableCards[0];
+          const cardIndex = gameState.player2.hand.indexOf(cardToPlay);
+          console.log("AI Turn: Playing card", cardToPlay);
+          dispatch({ type: GAME_ACTIONS.PLAY_CARD, player: 'player2', cardIndex, isCorrect: true });
+        }
+        
+        setTimeout(() => {
+          dispatch({ type: GAME_ACTIONS.NEXT_PHASE });
+        }, 1000);
+      }, 500);
+    }
+  }, [gameState.currentTurn, gameState.phase]);
+
+  // AIターン: バトルフェーズ
+  useEffect(() => {
+    if (gameState.currentTurn === 'player2' && gameState.phase === 'battle' && gameState.gameStatus === 'playing') {
+      console.log("AI Turn: Battle Phase - Attacking");
+      console.log("AI Field Cards:", gameState.player2.field);
+      console.log("Attacked Cards This Turn:", gameState.attackedCardsThisTurn);
+      
+      setTimeout(() => {
+        const aiFieldCards = gameState.player2.field;
+        
+        if (aiFieldCards && aiFieldCards.length > 0) {
+          aiFieldCards.forEach((card, index) => {
+            const cardId = `${card.id}-${card.word}`;
+            if (!gameState.attackedCardsThisTurn.has(cardId)) {
+              console.log("AI Turn: Attacking with card", card);
+              setTimeout(() => {
+                dispatch({ type: GAME_ACTIONS.ATTACK, attackingCard: card, defendingPlayer: 'player1' });
+              }, index * 500);
+            } else {
+              console.log("AI Turn: Card already attacked this turn", card);
+            }
+          });
+        }
+        
+        // ターン終了
+        const attackDelay = aiFieldCards.length > 0 ? aiFieldCards.length * 500 + 1000 : 1000;
+        setTimeout(() => {
+          console.log("AI Turn: Ending Turn");
+          dispatch({ type: GAME_ACTIONS.END_TURN });
+        }, attackDelay);
+      }, 500);
+    }
+  }, [gameState.currentTurn, gameState.phase]);
 
   const value = {
     gameState,
