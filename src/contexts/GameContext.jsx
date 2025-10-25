@@ -487,6 +487,13 @@ export const GameProvider = ({ children }) => {
   // AIターン: フィールドにカードが追加されたらバトルフェーズへ移行
   useEffect(() => {
     const phaseKey = `${gameState.turnCount}-main-to-battle`;
+    console.log("Field Monitor:", {
+      currentTurn: gameState.currentTurn,
+      phase: gameState.phase,
+      fieldLength: gameState.player2.field.length,
+      phaseKey,
+      processedPhase: aiProcessedPhase.current
+    });
     if (
       gameState.currentTurn === 'player2' && 
       gameState.phase === 'main' && 
